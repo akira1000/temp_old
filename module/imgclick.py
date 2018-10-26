@@ -11,6 +11,15 @@ import pyautogui
 #from ctypes import *
 #from getch import getch, pause
 
+#OpenCVのcv2.imreadは日本語がつかえないなので画像をimedecodeでメモリに一度読み込む
+def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
+    try:
+        n = np.fromfile(filename, dtype)
+        img2 = cv2.imdecode(n, flags)
+        return img2
+    except Exception as e:
+        print(e)
+        return None
 
 
 def imgclick(image="mark.bmp",px=0,py=0,imgminx=0,imgminy=0,imgmaxx=0,imgmaxy=0,threshold=0.9):
@@ -22,30 +31,32 @@ def imgclick(image="mark.bmp",px=0,py=0,imgminx=0,imgminy=0,imgmaxx=0,imgmaxy=0,
 			imgtemp=ImageGrab.grab((imgminx,imgminy,imgmaxx,imgmaxy))
 		if imgmaxx == 0:
 			imgtemp=ImageGrab.grab()
-		cap = np.asarray(imgtemp)
-		#img.save("img2.bmp")
+		Screencap = np.asarray(imgtemp)
 
 		#画像をグレースケールで読み込む
-		img = cv2.cvtColor(cap, cv2.COLOR_BGR2GRAY)
-		temp = cv2.imread("img\\"+image, 0)
-		#マッチングテンプレートを実行
-		result = cv2.matchTemplate(img, temp, cv2.TM_CCOEFF_NORMED)
-		#類似度の設定(0~1)
+		Screenimg = cv2.cvtColor(Screencap, cv2.COLOR_BGR2GRAY)
+
+		# 日本語試行錯誤中
+		# この下で動く
+		finalname = image
+
+		#		temp = cv2.imread(finalname, 0)
+		temp = imread(finalname, 0)
+
+		# マッチングテンプレートを実行
+		result = cv2.matchTemplate(Screenimg, temp, cv2.TM_CCOEFF_NORMED)
 		#threshold = 0.9
-		#検出結果から検出領域の位置を取得
 	#    loc = np.where(result >= threshold)
 
 		min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
 		#max_valが類似最大値の左上座標
 
 		if max_val < threshold:
-			print(image+"一致せず")
-
+			print(image+" 一致せず")
 		if max_val >= threshold:
 			pyautogui.click(max_loc[0]+px,max_loc[1]+py)
 #			print(max_loc)
 			return
-
 
 
 	#ここから先は終了措置ESCキーで終了 F1でPause Cでコンティニュー
@@ -53,7 +64,7 @@ def imgclick(image="mark.bmp",px=0,py=0,imgminx=0,imgminy=0,imgmaxx=0,imgmaxy=0,
 			kb = msvcrt.getch() # 押されていれば、キーを取得する
 			print(kb)
 	#        if kb.decode()=='q':
-	#       Escキーは\x1b
+	#       Escキーは\x1b   F1キーでポーズ
 			if kb.decode()=='\x1b':
 				sys.exit()
 			if kb.decode()=='\x00':
